@@ -17,10 +17,11 @@ Tập pool và tập test được chia theo trục thời gian với vùng đ�
 ## 2. Mô hình khởi đầu lạnh (cold start)
 
 Chép dòng vòng 0 từ `rounds_table.md`. Dựa vào `outputs/compare_round0.jpg`, cho biết mô hình khởi
-dầu lạnh không khớp nhãn tham chiếu ở những loại xe nào. Độ phủ (recall) theo kích thước xe cho
+đầu lạnh không khớp nhãn tham chiếu ở những loại xe nào. Độ phủ (recall) theo kích thước xe cho
 thấy điều gì? Một trường hợp nào cần người rà lại nhãn tham chiếu trước khi kết luận mô hình sai?
 
 Dòng vòng 0 từ `rounds_table.md`:
+
 - AP50: 0.771
 - P@0.25: 0.925
 - R@0.25: 0.489
@@ -41,6 +42,7 @@ Dẫn ba frame trong `reports/SELECTION.md` và một frame khác để chứng 
 mô hình không? Vì sao?
 
 Công thức `score = W_U·U + W_A·A + W_D·D` kết hợp ba yếu tố:
+
 - **U (Uncertainty - độ bất định)**: Đo mức độ model không chắc chắn về nhãn. W_U là trọng số cho yếu tố này.
 - **A (Ambiguity - độ mơ hồ)**: Đo số lượng box ambiguous (có thể bị sai) trong frame. W_A là trọng số.
 - **D (Diversity - độ đa dạng)**: Đo mức độ frame khác biệt so với các frame đã chọn. W_D là trọng số.
@@ -48,6 +50,7 @@ Công thức `score = W_U·U + W_A·A + W_D·D` kết hợp ba yếu tố:
 `MIN_GAP_S` là khoảng thời gian tối thiểu giữa các frame được chọn, nhằm tránh chọn các frame gần trùng nhau (cùng xe trong khung hình).
 
 Ba frame trong `reports/SELECTION.md` và lý do:
+
 1. **frame_0182.jpg** (score 0.9591): U=0.9182, D=1.0, 28 box với 18 ambiguous. Sau khi rà (xem `round1_diff.md`), số box tăng từ 13 lên 21, thêm 8 box. Điều này chứng minh điểm bất định cao tương quan với việc model bỏ sót xe. Frame này cải thiện mô hình vì bổ sung các box bị bỏ sót.
 
 2. **frame_0369.jpg** (score 0.9324): U=0.9315, D=0.8889, 43 box với 16 ambiguous. Sau rà, box tăng từ 14 lên 26, thêm 12 box. Điểm bất định cao chứng tỏ model rất không chắc chắn, và việc thêm nhiều box sau rà sẽ cải thiện recall.
@@ -73,12 +76,13 @@ quan sát độc lập, lỗi pre-label đã sửa và kết quả mô hình sau
 
 Bảng từ `rounds_table.md`:
 
-| vòng | model | ảnh train | box train | AP50 | Δ AP50 so cold start | P@0.25 | R@0.25 | F1 | R small | R medium | R large |
-| ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 0 | yolov8n cold start (COCO car+bus+truck) | 0 | 0 | 0.771 | — | 0.925 | 0.489 | 0.640 | 0.182 | 0.547 | 0.561 |
-| 1 | yolov8n fine-tune vong 1..1 | 12 | 241 | 0.468 | -0.304 | 1.000 | 0.164 | 0.281 | 0.000 | 0.128 | 0.683 |
+| vòng | model                                   | ảnh train | box train |  AP50 | Δ AP50 so cold start | P@0.25 | R@0.25 |    F1 | R small | R medium | R large |
+| ---: | --------------------------------------- | --------: | --------: | ----: | -------------------: | -----: | -----: | ----: | ------: | -------: | ------: |
+|    0 | yolov8n cold start (COCO car+bus+truck) |         0 |         0 | 0.771 |                    — |  0.925 |  0.489 | 0.640 |   0.182 |    0.547 |   0.561 |
+|    1 | yolov8n fine-tune vong 1..1             |        12 |       241 | 0.468 |               -0.304 |  1.000 |  0.164 | 0.281 |   0.000 |    0.128 |   0.683 |
 
 **Vòng 1:**
+
 - Sửa nhãn: Model đề xuất 169 box, sau sửa còn 241 box (tăng 72 box). Cụ thể: accepted 141 box, edited 12 box, deleted 16 FP, added 88 FN (xem `round1_diff.md`).
 - AP50: 0.468, giảm 0.304 so với cold start (0.771 - 0.468 = -0.304).
 - P@0.25 tăng từ 0.925 lên 1.000 (không có false positive ở ngưỡng 0.25).
@@ -89,6 +93,7 @@ Bảng từ `rounds_table.md`:
 - R large tăng lên 0.683.
 
 So với vòng 0, AP50 giảm đáng kể (-0.304). Điều này có vẻ trái ngược, nhưng có thể giải thích:
+
 1. Nhãn của vòng 1 (12 ảnh) có thể chưa đủ đại diện cho toàn bộ không gian đặc trưng.
 2. Các nhãn được sửa có thể có một số box sai (do quá trình gán nhãn thủ công) hoặc các xe được thêm có thể là những trường hợp khó mà model chưa thể học tốt với chỉ 12 ảnh.
 3. Thiếu các frame train ở những khu vực thời gian khác nhau.
@@ -96,6 +101,7 @@ So với vòng 0, AP50 giảm đáng kể (-0.304). Điều này có vẻ trái 
 **Ca thay đổi trên `compare_round1.jpg`:** Trên ảnh so sánh, có thể thấy model sau fine-tune phát hiện thêm một số xe lớn (R large tăng từ 0.561 lên 0.683) nhưng lại bỏ sót nhiều xe nhỏ hơn (R small giảm xuống 0.000).
 
 **Phân biệt quan sát độc lập, lỗi pre-label, kết quả mô hình:**
+
 - **Quan sát độc lập** (`BLIND_SCAN.md`): Frame frame_0099.jpg, thấy 22 xe, hai vị trí dễ bỏ sót là xe ở góc dưới bên phải (bị cắt bởi mép ảnh, nhòe) và xe màu vàng ở bên phải (chỉ sáng 1 đèn).
 - **Lỗi pre-label đã sửa** (`REVIEW_LOG.csv`): Trên frame_0099.jpg, thêm 2 box cho xe gần mép dưới (FN của model), thêm box cho xe cạnh nhóm 2 xe chung box, sửa box xe màu vàng (chưa bao trùm hết thân xe). Trên frame_0107.jpg, xóa 2 box chung cho 2 xe, thêm 3 box riêng cho từng xe.
 - **Kết quả mô hình sau train** (`round1_diff.md`): Sau khi sửa, tổng số box tăng từ 169 lên 241, chứng tỏ model ban đầu bỏ sót rất nhiều xe.
@@ -110,6 +116,7 @@ có luật bỏ qua xe quá nhỏ và nhãn tham chiếu do mô hình tạo chư
 ảnh hưởng thế nào đến kết luận? Nếu AP50 giảm, bạn sẽ kiểm tra điều gì trước khi train thêm?
 
 So với cold start (AP50=0.771), vòng 1 có AP50=0.468, giảm đáng kể (-0.304). Kết quả này cho thấy fine-tune trên 12 ảnh được chọn bằng active learning chưa cải thiện được mô hình. Lý do có thể:
+
 - Số lượng ảnh train (12) quá ít so với không gian đặc trưng đa dạng.
 - Nhãn của 12 ảnh có thể chưa đủ chất lượng hoặc đại diện.
 - Model cần nhiều vòng học chủ động hơn để hội tụ.
@@ -117,16 +124,19 @@ So với cold start (AP50=0.771), vòng 1 có AP50=0.468, giảm đáng kể (-0
 Tôi quyết định **tiếp tục** vì một vòng chưa đủ để đánh giá hiệu quả của active learning. Theo lý thuyết, sau nhiều vòng, mô hình sẽ dần cải thiện.
 
 **Đề xuất hai ca cho vòng sau:**
+
 1. **frame_0372.jpg** (thứ 6, score 0.9101, 148.8s): U=0.9202, D=1.0, 42 box với 15 ambiguous. Chi phí rà 42 box, nguy cơ trùng với frame_0369 (147.6s) và frame_0374 (149.6s) là thấp (MIN_GAP_S đảm bảo khoảng cách).
 2. **frame_0313.jpg** (thứ 31, score 0.8433, 125.2s): U=0.92, D=0.6111, 28 box với 11 ambiguous. Chi phí rà 28 box, điểm U cao chứng tỏ model rất bất định.
 
 **Giới hạn ảnh hưởng đến kết luận:**
+
 - Tập test chỉ 20 ảnh: Sai số thống kê cao, kết quả có thể biến động mạnh.
 - Bỏ qua xe quá nhỏ (cao dưới 16 px): Loại trừ các trường hợp khó, có thể làm gia tăng giả tạo các số đo như recall.
 - Nhãn test do mô hình tạo chưa được rà: Nhãn test có thể có sai sót, khiến đánh giá AP50 không hoàn toàn chính xác.
 
 **Nếu AP50 giảm, sẽ kiểm tra:**
+
 1. Kiểm tra chất lượng nhãn của các frame train (có box sai không, có đủ xe không).
 2. Kiểm tra sự phân bố của các frame train (có phủ đủ các khu vực thời gian không).
-3. Kiểm traem các tham số train (learning rate, epochs) có phù hợp không.
+3. Kiểm tra xem các tham số train (learning rate, epochs) có phù hợp không.
 4. Kiểm tra liệu có sự không tương thích giữa nhãn train và nhãn test.
